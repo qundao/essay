@@ -1,0 +1,43 @@
+name: Pages
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 1 * * 1"
+
+jobs:
+  deploy:
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: qundao/void-essay
+          token: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 1
+
+      # - uses: pnpm/action-setup@v4
+      #   with:
+      #     version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: latest
+      - name: Build all docs
+        run: npm i && npx quartz build -d docs > /dev/null 2>&1
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
